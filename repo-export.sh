@@ -3,6 +3,7 @@
 # Output lands one directory above the repo, named: {repo-name}_{YYYYMMDD_HHMM}.txt
 # Usage: run from anywhere inside the repo (it will find the root via git)
 # Add to Claude project knowledge to give Claude full repo context.
+rm -f ~/code/*.txt
 
 set -euo pipefail
 
@@ -31,6 +32,22 @@ INCLUDE_EXTENSIONS=(
   txt
 )
 
+# ── Exact filenames to include (no extension) ────────────────────────────────
+INCLUDE_EXACT_NAMES=(
+  Dockerfile
+  Caddyfile
+  Makefile
+  Procfile
+  Vagrantfile
+  nginx.conf
+  .env.example
+  .eslintrc
+  .prettierrc
+  .editorconfig
+  .nvmrc
+  .node-version
+)
+
 # ── Paths/patterns to exclude ────────────────────────────────────────────────
 EXCLUDE_DIRS=(
   node_modules
@@ -52,10 +69,16 @@ for dir in "${EXCLUDE_DIRS[@]}"; do
   FIND_ARGS+=(-not -path "*/${dir}/*" -not -path "*/${dir}")
 done
 
-# Include only matching extensions
+# Include files matched by extension
 EXT_ARGS=()
 for ext in "${INCLUDE_EXTENSIONS[@]}"; do
   EXT_ARGS+=(-o -name "*.${ext}")
+done
+
+# Include files matched by exact name
+NAME_ARGS=()
+for name in "${INCLUDE_EXACT_NAMES[@]}"; do
+  NAME_ARGS+=(-o -name "${name}")
 done
 
 # ── Write output ──────────────────────────────────────────────────────────────
@@ -78,10 +101,10 @@ done
   echo "── FILES ───────────────────────────────────────────────────────"
   echo ""
 
-  # Find and sort all matching files
+  # Find and sort all matching files (extensions + exact names, combined)
   find "$REPO_ROOT" \
     "${FIND_ARGS[@]}" \
-    \( "${EXT_ARGS[@]:1}" \) \
+    \( "${EXT_ARGS[@]:1}" "${NAME_ARGS[@]}" \) \
     -type f \
     | sort \
     | while IFS= read -r filepath; do

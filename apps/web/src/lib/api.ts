@@ -58,6 +58,29 @@ export interface JobDetail extends Job {
 
 export type JobStatus = 'open' | 'in_progress' | 'complete' | 'invoiced';
 
+export interface TimeEntry {
+  id: string;
+  jobId: string;
+  startedAt: string | null;
+  endedAt: string | null;
+  notes: string | null;
+  durationMinutes: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MediaAsset {
+  id: string;
+  type: string | null;
+  mimeType: string | null;
+  createdAt: string;
+}
+
+export interface GenerateInvoiceResult {
+  invoiceId: string;
+  downloadUrl: string;
+}
+
 export interface CreateClientInput {
   name: string;
   email?: string;
@@ -107,6 +130,18 @@ export interface UpdateJobInput {
   notes?: string;
 }
 
+export interface CreateTimeEntryInput {
+  jobId: string;
+  startedAt: string;
+  endedAt?: string | null;
+  notes?: string;
+}
+
+export interface UpdateTimeEntryInput {
+  endedAt?: string | null;
+  notes?: string;
+}
+
 type DataResponse<T> = {
   data: T;
 };
@@ -114,10 +149,11 @@ type DataResponse<T> = {
 type QueryParams = Record<string, string | undefined>;
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const isFormData = init?.body instanceof FormData;
   const response = await fetch(path, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(init?.headers ?? {}),
     },
   });
@@ -185,7 +221,10 @@ export async function createClient(data: CreateClientInput): Promise<Client> {
   return response.data;
 }
 
-export async function updateClient(id: string, data: UpdateClientInput): Promise<Client> {
+export async function updateClient(
+  id: string,
+  data: UpdateClientInput,
+): Promise<Client> {
   const response = await apiFetch<DataResponse<Client>>(`/api/clients/${id}`, {
     method: 'PATCH',
     ...toJsonBody(data),
@@ -209,11 +248,15 @@ export async function listVehicles(params?: {
 }
 
 export async function getVehicle(id: string): Promise<VehicleWithClient> {
-  const response = await apiFetch<DataResponse<VehicleWithClient>>(`/api/vehicles/${id}`);
+  const response = await apiFetch<DataResponse<VehicleWithClient>>(
+    `/api/vehicles/${id}`,
+  );
   return response.data;
 }
 
-export async function createVehicle(data: CreateVehicleInput): Promise<Vehicle> {
+export async function createVehicle(
+  data: CreateVehicleInput,
+): Promise<Vehicle> {
   const response = await apiFetch<DataResponse<Vehicle>>('/api/vehicles', {
     method: 'POST',
     ...toJsonBody(data),
@@ -221,11 +264,17 @@ export async function createVehicle(data: CreateVehicleInput): Promise<Vehicle> 
   return response.data;
 }
 
-export async function updateVehicle(id: string, data: UpdateVehicleInput): Promise<Vehicle> {
-  const response = await apiFetch<DataResponse<Vehicle>>(`/api/vehicles/${id}`, {
-    method: 'PATCH',
-    ...toJsonBody(data),
-  });
+export async function updateVehicle(
+  id: string,
+  data: UpdateVehicleInput,
+): Promise<Vehicle> {
+  const response = await apiFetch<DataResponse<Vehicle>>(
+    `/api/vehicles/${id}`,
+    {
+      method: 'PATCH',
+      ...toJsonBody(data),
+    },
+  );
   return response.data;
 }
 
@@ -239,7 +288,9 @@ export async function listJobs(params?: {
   vehicleId?: string;
   status?: string;
 }): Promise<JobSummary[]> {
-  const response = await apiFetch<DataResponse<JobSummary[]>>(withQuery('/api/jobs', params));
+  const response = await apiFetch<DataResponse<JobSummary[]>>(
+    withQuery('/api/jobs', params),
+  );
   return response.data;
 }
 
@@ -256,7 +307,10 @@ export async function createJob(data: CreateJobInput): Promise<Job> {
   return response.data;
 }
 
-export async function updateJob(id: string, data: UpdateJobInput): Promise<Job> {
+export async function updateJob(
+  id: string,
+  data: UpdateJobInput,
+): Promise<Job> {
   const response = await apiFetch<DataResponse<Job>>(`/api/jobs/${id}`, {
     method: 'PATCH',
     ...toJsonBody(data),
@@ -268,4 +322,111 @@ export async function deleteJob(id: string): Promise<void> {
   await apiFetch<void>(`/api/jobs/${id}`, {
     method: 'DELETE',
   });
+}
+
+export async function getTimeEntries(jobId: string): Promise<TimeEntry[]> {
+  const response = await apiFetch<DataResponse<TimeEntry[]>>(
+    withQuery('/api/time-entries', { jobId }),
+  );
+  return response.data;
+}
+
+export async function createTimeEntry(
+  data: CreateTimeEntryInput,
+): Promise<TimeEntry> {
+  const response = await apiFetch<DataResponse<TimeEntry>>(
+    '/api/time-entries',
+    {
+      method: 'POST',
+      ...toJsonBody(data),
+    },
+  );
+  return response.data;
+}
+
+export async function updateTimeEntry(
+  id: string,
+  data: UpdateTimeEntryInput,
+): Promise<TimeEntry> {
+  const response = await apiFetch<DataResponse<TimeEntry>>(
+    `/api/time-entries/${id}`,
+    {
+      method: 'PATCH',
+      ...toJsonBody(data),
+    },
+  );
+  return response.data;
+}
+
+export async function deleteTimeEntry(id: string): Promise<void> {
+  await apiFetch<void>(`/api/time-entries/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function getMediaAssets(jobId: string): Promise<MediaAsset[]> {
+  const response = await apiFetch<DataResponse<MediaAsset[]>>(
+    withQuery('/api/media', { jobId }),
+  );
+  return response.data;
+}
+
+export async function uploadPhoto(
+  jobId: string,
+  file: File,
+): Promise<MediaAsset> {
+  const body = new FormData();
+  body.append('jobId', jobId);
+  body.append('file', file);
+
+  const response = await apiFetch<DataResponse<MediaAsset>>(
+    '/api/media/upload',
+    {
+      method: 'POST',
+      body,
+    },
+  );
+  return response.data;
+}
+
+export async function deleteMediaAsset(id: string): Promise<void> {
+  await apiFetch<void>(`/api/media/${id}`, {
+    method: 'DELETE',
+  });
+}
+
+export function getMediaUrl(assetId: string): string {
+  return `/api/media/${assetId}`;
+}
+
+export async function generateInvoice(
+  jobId: string,
+): Promise<GenerateInvoiceResult> {
+  const response = await apiFetch<DataResponse<GenerateInvoiceResult>>(
+    `/api/invoices/generate/${jobId}`,
+    {
+      method: 'POST',
+    },
+  );
+  return response.data;
+}
+
+export function getInvoiceDownloadUrl(jobId: string): string {
+  return `/api/invoices/${jobId}/download`;
+}
+
+export async function invoiceExists(jobId: string): Promise<boolean> {
+  const response = await fetch(getInvoiceDownloadUrl(jobId), {
+    method: 'HEAD',
+  });
+
+  if (response.status === 404) {
+    return false;
+  }
+
+  if (!response.ok) {
+    throw new Error('Failed to check invoice');
+  }
+
+  return true;
 }

@@ -12,7 +12,9 @@ services:
       - internal
 
   api:
-    build: ../apps/api
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
     container_name: wrenchlog-api
     depends_on:
       - db
@@ -23,6 +25,8 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       LLM_BASE_URL: ${LLM_BASE_URL}
       LLM_MODEL: ${LLM_MODEL}
+    volumes:
+      - wrenchlog_uploads:/data
     restart: unless-stopped
     networks:
       - internal
@@ -40,6 +44,7 @@ services:
 
 volumes:
   postgres_data:
+  wrenchlog_uploads:
 
 networks:
   internal:
