@@ -448,17 +448,13 @@ export function getInvoiceDownloadUrl(jobId: string): string {
 }
 
 export async function invoiceExists(jobId: string): Promise<boolean> {
-  const response = await fetch(getInvoiceDownloadUrl(jobId), {
-    method: 'HEAD',
-  });
-
-  if (response.status === 404) {
+  try {
+    const response = await fetch(getInvoiceDownloadUrl(jobId), {
+      method: 'GET',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    return response.ok;
+  } catch {
     return false;
   }
-
-  if (!response.ok) {
-    throw new Error('Failed to check invoice');
-  }
-
-  return true;
 }
