@@ -23,6 +23,8 @@ services:
       PORT: 3001
       NODE_ENV: production
       JWT_SECRET: ${JWT_SECRET}
+      APP_USERNAME: ${APP_USERNAME}
+      APP_PASSWORD: ${APP_PASSWORD}
       LLM_BASE_URL: ${LLM_BASE_URL}
       LLM_MODEL: ${LLM_MODEL}
     volumes:
