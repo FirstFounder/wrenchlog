@@ -1,4 +1,6 @@
 import express from 'express';
+import { requireAuth } from './middleware/auth';
+import authRouter from './routes/auth';
 import clientsRouter, { HttpError } from './routes/clients';
 import invoicesRouter from './routes/invoices';
 import jobsRouter from './routes/jobs';
@@ -18,6 +20,9 @@ export function createApp() {
     });
   });
 
+  app.use('/api/auth', authRouter);
+
+  app.use(requireAuth);
   app.use('/api/clients', clientsRouter);
   app.use('/api/vehicles', vehiclesRouter);
   app.use('/api/jobs', jobsRouter);

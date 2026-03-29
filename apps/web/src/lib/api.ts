@@ -148,11 +148,22 @@ type DataResponse<T> = {
 
 type QueryParams = Record<string, string | undefined>;
 
+let token: string | null = null;
+
+export function setToken(t: string | null): void {
+  token = t;
+}
+
+export function getToken(): string | null {
+  return token;
+}
+
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const isFormData = init?.body instanceof FormData;
   const response = await fetch(path, {
     ...init,
     headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(init?.headers ?? {}),
     },
@@ -201,6 +212,27 @@ function toJsonBody(data: unknown): RequestInit {
   return {
     body: JSON.stringify(data),
   };
+}
+
+export async function login(
+  username: string,
+  password: string,
+): Promise<string> {
+  const response = await apiFetch<{ token: string }>('/api/auth/login', {
+    method: 'POST',
+    ...toJsonBody({ username, password }),
+  });
+
+  return response.token;
+}
+
+export async function validateToken(): Promise<boolean> {
+  try {
+    await apiFetch<{ sub: string }>('/api/auth/me');
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function listClients(): Promise<Client[]> {
