@@ -1,0 +1,7 @@
+# Reference snippet only: merge this block into ~/infra/caddy/Caddyfile on the host.
+
+# WrenchLog
+wrenchlog.rennert.net {
+  reverse_proxy /api/* wrenchlog-api:3001
+  reverse_proxy * wrenchlog-web:80
+}
