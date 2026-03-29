@@ -1,10 +1,33 @@
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import Layout from './components/Layout';
+import ClientCreatePage from './pages/ClientCreatePage';
+import ClientDetailPage from './pages/ClientDetailPage';
+import ClientsPage from './pages/ClientsPage';
+import JobCreatePage from './pages/JobCreatePage';
+import JobDetailPage from './pages/JobDetailPage';
+import JobsPage from './pages/JobsPage';
+import VehicleCreatePage from './pages/VehicleCreatePage';
+import VehicleDetailPage from './pages/VehicleDetailPage';
+import VehiclesPage from './pages/VehiclesPage';
+
 function App() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[#0f172a]">
-      <h1 className="text-4xl font-semibold tracking-tight text-white">
-        WrenchLog
-      </h1>
-    </main>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Navigate to="/jobs" replace />} />
+          <Route path="/jobs" element={<JobsPage />} />
+          <Route path="/jobs/new" element={<JobCreatePage />} />
+          <Route path="/jobs/:id" element={<JobDetailPage />} />
+          <Route path="/clients" element={<ClientsPage />} />
+          <Route path="/clients/new" element={<ClientCreatePage />} />
+          <Route path="/clients/:id" element={<ClientDetailPage />} />
+          <Route path="/vehicles" element={<VehiclesPage />} />
+          <Route path="/vehicles/new" element={<VehicleCreatePage />} />
+          <Route path="/vehicles/:id" element={<VehicleDetailPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
